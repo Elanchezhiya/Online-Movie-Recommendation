@@ -1,0 +1,19 @@
+
+services:
+  backend:
+    build:
+      context: ./backend
+    container_name: cinematch-backend
+    restart: unless-stopped
+    expose:
+      - "5000"
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: cinematch-frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - backend

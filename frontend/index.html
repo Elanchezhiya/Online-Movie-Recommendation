@@ -1,0 +1,68 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CineMatch | Discover Movies</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header class="navbar">
+        <a class="logo" href="#">CineMatch<span>.</span></a>
+        <nav>
+            <a href="#movies">Explore</a>
+            <a href="#watchlist">My Watchlist</a>
+        </nav>
+    </header>
+
+    <main>
+        <section class="hero">
+            <p class="eyebrow">YOUR NEXT MOVIE NIGHT STARTS HERE</p>
+            <h1>Find your next<br><span>favorite film.</span></h1>
+            <p class="subtitle">
+                Explore great movies, discover new genres, and save
+                the films you want to watch.
+            </p>
+
+            <div class="search-box">
+                <input id="searchInput"
+                       type="search"
+                       placeholder="Search movies...">
+                <button id="searchButton">Search</button>
+            </div>
+        </section>
+
+        <section id="movies" class="content-section">
+            <div class="section-heading">
+                <div>
+                    <p class="eyebrow">CURATED FOR YOU</p>
+                    <h2>Explore movies</h2>
+                </div>
+                <select id="genreFilter" aria-label="Filter by genre">
+                    <option value="">All genres</option>
+                    <option value="Sci-Fi">Sci-Fi</option>
+                    <option value="Thriller">Thriller</option>
+                    <option value="Action">Action</option>
+                </select>
+            </div>
+
+            <p id="movieCount" class="muted"></p>
+            <div id="movieGrid" class="movie-grid"></div>
+            <p id="message" class="muted"></p>
+        </section>
+
+        <section id="watchlist" class="content-section">
+            <p class="eyebrow">SAVED FOR LATER</p>
+            <h2>My watchlist</h2>
+            <div id="watchlistGrid" class="movie-grid"></div>
+        </section>
+    </main>
+
+    <footer>
+        <p>CineMatch © 2026 · Built with Python, Docker & AWS</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
