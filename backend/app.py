@@ -37,7 +37,7 @@ MOVIES = [
 
 @app.route("/api/health")
 def health():
-    return jsonify({"status": "healthy"})
+    return {"status": "healthy"}, 200
 
 
 @app.route("/api/movies")
