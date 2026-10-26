@@ -1,37 +1,36 @@
-# CineMatch - Online Movie Recommendation
+# CineMatch | Online Movie Recommendation
 
-CineMatch is a lightweight IMDb-style movie discovery and watchlist application built as an AWS DevOps project. It uses a Flask REST API for movie data, a static HTML/CSS/JavaScript frontend served by Nginx, Docker Compose for local/container deployment, Jenkins for CI, and Kubernetes (Minikube) for container orchestration.
+CineMatch is a demo movie-discovery and watchlist application for practicing AWS and DevOps workflows. The frontend uses HTML, CSS, JavaScript, and Nginx. The backend is a Python Flask API. Docker Compose runs the containers locally, Jenkins runs the build and test pipeline, and Kubernetes/Minikube manages application pods.
 
-> **Repository:** https://github.com/Elanchezhiya/Online-Movie-Recommendation
+> Repository URL: replace `<OWNER>/<REPOSITORY>` with the GitHub repository you use.
 
 ## Features
 
-- Browse a sample movie catalogue with genres, ratings, and descriptions.
+- Browse a small movie catalogue with genres, descriptions, and ratings.
 - Search movies by title and filter by genre.
-- Add and remove movies from a watchlist saved in the browser's local storage.
-- Flask endpoints for health checks, movie search, and recommendations.
-- Docker images for frontend and backend.
-- Automated backend tests with pytest.
-- Jenkins pipeline for checkout, tests, and Docker image builds.
-- Kubernetes deployments and ClusterIP services for frontend and backend.
+- Add and remove movies from a browser-local watchlist.
+- Flask health, movie-search, and recommendation endpoints.
+- Docker container builds and Docker Compose support.
+- Backend tests with pytest.
+- Jenkins CI pipeline for checkout, tests, and image builds.
+- Kubernetes Deployments and ClusterIP Services.
 
 ## Technology stack
 
-- **Frontend:** HTML5, CSS3, JavaScript, Nginx
-- **Backend:** Python 3.12, Flask
-- **Testing:** pytest
-- **Containers:** Docker, Docker Compose
-- **CI:** Jenkins
-- **Orchestration:** Kubernetes with Minikube
-- **Cloud host:** AWS EC2 (Ubuntu)
-- **Source control:** Git and GitHub
+- Frontend: HTML5, CSS3, JavaScript, Nginx
+- Backend: Python 3.12, Flask
+- Tests: pytest
+- Containers: Docker, Docker Compose
+- CI: Jenkins
+- Orchestration: Kubernetes with Minikube
+- Cloud host: AWS EC2 running Ubuntu
+- Source control: Git and GitHub
 
 ## Architecture
 
 ```text
 Browser
   |
-  | HTTP :80 (or SSH-tunnelled localhost:8081)
   v
 Frontend Service -> Nginx frontend pods
                          |
@@ -40,7 +39,7 @@ Frontend Service -> Nginx frontend pods
                  Backend Service -> Flask backend pods
 ```
 
-The frontend uses relative API URLs such as `/api/movies`. Nginx forwards these requests to the backend service. In Docker Compose, that service is named `backend`. In Kubernetes, the service name is `cinematch-backend`; **make sure the Nginx configuration used in the Kubernetes image points to this service**. The repository's current `frontend/nginx.conf` uses `backend:5000`, which is suitable for Compose but is not the Kubernetes service name. See the Kubernetes note below.
+The frontend calls relative URLs such as `/api/movies`. Nginx forwards these requests to the Flask backend. The Nginx proxy target must match the backend service name in the environment where you deploy. Docker Compose uses the service name `backend`; the Kubernetes manifest uses `cinematch-backend`. If one Nginx configuration is shared by both environments, make sure its service name matches or keep separate environment-specific configs/images.
 
 ## Project structure
 
@@ -66,40 +65,35 @@ Online-Movie-Recommendation/
 
 ## Prerequisites
 
-For EC2, use an Ubuntu instance with enough CPU, RAM, and disk for Jenkins, Docker, and Minikube together. A small instance may run out of memory. You need:
-- Git
-- Docker Engine and Docker Compose plugin
-- Python 3.12 (optional for running tests on the host; tests can also run inside Docker)
-- Jenkins (for CI)
-- Minikube and kubectl (for Kubernetes)
-- A GitHub account and Docker Hub account if you want to publish images
+For a combined Jenkins + Docker + Minikube demonstration, use an EC2 instance with enough CPU, RAM, and disk for all services. A small instance may run out of memory. You need Git, Docker Engine, the Docker Compose plugin, Jenkins, Minikube, and kubectl. Python 3.12 is optional on the host because tests can run in a Python container.
 
-Commands below assume a Linux Ubuntu terminal and a non-root user named `ubuntu`. Avoid running Minikube with the Docker driver as root.
+Run Minikube as a regular Ubuntu user, not root.
 
 ## 1. Clone the repository
 
-On a clean Ubuntu machine/EC2 instance:
+On a new Ubuntu machine or EC2 instance, replace the URL with your repository URL:
 
 ```bash
 sudo apt-get update
 sudo apt-get install -y git curl ca-certificates
-git clone https://github.com/Elanchezhiya/Online-Movie-Recommendation.git
-cd Online-Movie-Recommendation
+git clone https://github.com/<OWNER>/<REPOSITORY>.git
+cd <REPOSITORY>
 ```
 
-If you already cloned it, enter the existing project directory and sync with GitHub:
+If the repository is already present, enter its directory and sync changes:
 
 ```bash
-cd ~/cinematch   # use the actual folder where you cloned the repository
+cd ~/cinematch   # replace this with your actual project directory if different
 git status
+git fetch origin
 git pull --rebase origin main
 ```
 
-If Git reports conflicts, resolve the conflicted files before continuing. Do not use `git push --force` to fix a non-fast-forward error.
+If Git reports conflicts, resolve them before continuing. Do not use `git push --force` to fix a non-fast-forward rejection.
 
-## 2. Install and verify Docker on Ubuntu
+## 2. Install and verify Docker
 
-If Docker is not already installed:
+If Docker is not installed already:
 
 ```bash
 sudo apt-get update
@@ -108,7 +102,7 @@ sudo systemctl enable --now docker
 sudo usermod -aG docker ubuntu
 ```
 
-Sign out and sign back in (or start a fresh SSH session) so the new group membership applies. Then run:
+Sign out and sign back in to refresh the group membership. Then verify:
 
 ```bash
 whoami
@@ -118,9 +112,9 @@ docker compose version
 docker ps
 ```
 
-The shell should be the `ubuntu` user and `groups` should include `docker`. Docker-group membership grants root-equivalent privileges, so only trusted users should be added.
+The `ubuntu` user should be listed in the `docker` group. Docker-group membership grants root-equivalent privileges, so add only trusted users.
 
-## 3. Run tests
+## 3. Run backend tests
 
 From the repository root:
 
@@ -132,9 +126,9 @@ docker run --rm \
   sh -c "pip install -q -r requirements.txt && pytest -q"
 ```
 
-Expected result: all three tests pass.
+Expected: all included backend tests pass.
 
-Alternatively, if Python 3.12 and pip are installed locally:
+Alternatively, if Python and pip are installed on the host:
 
 ```bash
 python3 -m venv .venv
@@ -148,8 +142,6 @@ deactivate
 
 ## 4. Build and run with Docker Compose
 
-The Compose configuration exposes the frontend on port 80 and keeps the backend internal.
-
 ```bash
 docker compose build
 docker compose up -d
@@ -157,7 +149,7 @@ docker compose ps
 docker compose logs --tail=100
 ```
 
-On the EC2 instance, test the frontend locally:
+Test locally on the EC2 instance:
 
 ```bash
 curl -I http://localhost/
@@ -165,7 +157,7 @@ curl http://localhost/api/health
 curl http://localhost/api/movies
 ```
 
-Browse to `http://EC2_PUBLIC_IPV4/` only if TCP port 80 is allowed in the EC2 security group. For safer testing, use an SSH tunnel rather than opening public ports. Stop Compose with:
+If port 80 is not exposed publicly, use an SSH tunnel for browser testing. Stop Compose with:
 
 ```bash
 docker compose down
@@ -173,43 +165,38 @@ docker compose down
 
 ## 5. Build and publish Docker images
 
-The Kubernetes manifest currently expects these image names:
-- `elandsmith1998/cinematch-backend:1.0`
-- `elandsmith1998/cinematch-frontend:1.0`
-
-Build them from the repository root:
+Keep the Docker Hub namespace out of source files. Set it only in your terminal session, replacing the example value locally:
 
 ```bash
-docker build -t elandsmith1998/cinematch-backend:1.0 ./backend
-docker build -t elandsmith1998/cinematch-frontend:1.0 ./frontend
+export DOCKERHUB_USERNAME=your_dockerhub_namespace
+```
+
+Build both images from the repository root:
+
+```bash
+docker build -t "$DOCKERHUB_USERNAME/cinematch-backend:1.0" ./backend
+docker build -t "$DOCKERHUB_USERNAME/cinematch-frontend:1.0" ./frontend
 docker image ls | grep cinematch
 ```
 
-Log in to Docker Hub and push:
+Authenticate interactively and publish:
 
 ```bash
 docker login
-docker push elandsmith1998/cinematch-backend:1.0
-docker push elandsmith1998/cinematch-frontend:1.0
+docker push "$DOCKERHUB_USERNAME/cinematch-backend:1.0"
+docker push "$DOCKERHUB_USERNAME/cinematch-frontend:1.0"
 ```
 
-Use your own Docker Hub namespace if those images are not yours, and update `k8s/deployment.yaml` accordingly. Never put Docker Hub passwords or access tokens in the repository or Jenkinsfile; use Jenkins credentials.
+Never store Docker Hub passwords or tokens in source code, the README, a Dockerfile, or the Jenkinsfile. Use Jenkins Credentials for pipeline authentication. If you also want your personal Docker Hub account identity to remain separate from the project, publish images under a dedicated organization or project account.
 
-## 6. Install Minikube and kubectl (if needed)
+## 6. Start Minikube and check Kubernetes
 
-Follow the current official installation instructions for your Ubuntu release:
+Install Minikube and kubectl using the official instructions:
+
 - Minikube: https://minikube.sigs.k8s.io/docs/start/
 - kubectl: https://kubernetes.io/docs/tasks/tools/install-kubectl-linux/
 
-Then verify:
-
-```bash
-minikube version
-kubectl version --client
-docker ps
-```
-
-Run all Minikube commands as the regular `ubuntu` user, not root. Start the single-node local learning cluster:
+Then start the single-node learning cluster as the regular `ubuntu` user:
 
 ```bash
 minikube start --driver=docker
@@ -219,11 +206,11 @@ kubectl get nodes
 kubectl get pods -A
 ```
 
-Expected: current context is `minikube` and the node eventually reports `Ready`.
+Expected: the current context is `minikube` and its node becomes `Ready`.
 
-## 7. Important Kubernetes Nginx configuration
+## 7. Kubernetes Nginx configuration
 
-The current `frontend/nginx.conf` points to `http://backend:5000/api/`, which matches the Docker Compose service name but not the Kubernetes service named `cinematch-backend`. Before deploying on Kubernetes, change the proxy target for the Kubernetes image to:
+The Kubernetes backend Service is named `cinematch-backend`. For Kubernetes, the Nginx proxy block should use that service name:
 
 ```nginx
 location /api/ {
@@ -233,19 +220,21 @@ location /api/ {
 }
 ```
 
-Because the same image is currently used for Compose and Kubernetes, choose one of these approaches:
-1. Use a separate Kubernetes Nginx config and Docker image tag; or
-2. Rename the backend service in Kubernetes to `backend` so it matches the existing config.
-
-The simplest for the existing manifest is to update `frontend/nginx.conf` for Kubernetes, rebuild and push the frontend image, then deploy it. If you still want Docker Compose, its Nginx service resolution will need to match the config too. Don't assume the app is fully working until you test both frontend and API requests.
+The existing Compose configuration may instead require `http://backend:5000/api/`. Use a Kubernetes-specific Nginx configuration/image, or make the service names consistent. Rebuild and push the frontend image after changing its Nginx configuration.
 
 ## 8. Deploy to Kubernetes
 
-After images are pushed and the Nginx service target matches the Kubernetes service:
+Set the namespace in your shell, install `envsubst` if necessary, and render the manifest at deployment time:
 
 ```bash
-cd ~/cinematch   # adjust to the actual repository folder
-kubectl apply -f k8s/deployment.yaml
+sudo apt-get install -y gettext-base
+export DOCKERHUB_USERNAME=your_dockerhub_namespace
+envsubst '${DOCKERHUB_USERNAME}' < k8s/deployment.yaml | kubectl apply -f -
+```
+
+Check rollout and resource status:
+
+```bash
 kubectl rollout status deployment/cinematch-backend --timeout=180s
 kubectl rollout status deployment/cinematch-frontend --timeout=180s
 kubectl get deployments
@@ -253,7 +242,7 @@ kubectl get pods
 kubectl get services
 ```
 
-Expected: backend and frontend pods are `Running` and ready. If a pod fails:
+If a pod fails, inspect it before deleting or restarting it:
 
 ```bash
 kubectl get pods
@@ -263,44 +252,36 @@ kubectl logs <pod-name>
 kubectl get events --sort-by=.lastTimestamp
 ```
 
-Don't delete or repeatedly restart failing pods before checking their logs and events.
+## 9. Access the app with port forwarding
 
-## 9. Access the frontend with port forwarding
-
-Keep the port-forward process running in one EC2 terminal:
+In an EC2 terminal, start port forwarding and leave this terminal open:
 
 ```bash
 kubectl port-forward service/cinematch-frontend 8081:80
 ```
 
-It should say it is forwarding from `127.0.0.1:8081` to port 80. **Keep this terminal open.**
-
-In a second terminal on your Windows computer, use the private key stored on Windows to create an SSH tunnel. Replace the public IP and key path with your own values:
+On Windows, open a separate PowerShell window and create the SSH tunnel. Replace the key path and public IP with your own values:
 
 ```powershell
-ssh -i "D:\\Downloads\\Online-movie-key.pem" -o IdentitiesOnly=yes -L 8081:127.0.0.1:8081 ubuntu@YOUR_EC2_PUBLIC_IP
+ssh -i "C:\path\to\your-key.pem" -o IdentitiesOnly=yes -L 8081:127.0.0.1:8081 ubuntu@YOUR_EC2_PUBLIC_IP
 ```
 
-Then visit http://localhost:8081 in your browser. Do not run the Windows SSH command inside the Linux EC2 terminal. If OpenSSH rejects the key, restrict the PEM file's Windows ACL permissions and retry from PowerShell. Do not upload or share your private key. No inbound security-group rule for port 8081 is needed for this SSH-tunnel method; port 22 must be restricted to trusted source IPs.
+Keep the SSH session open and visit http://localhost:8081 in the browser. Do not run the Windows SSH command inside the Linux EC2 terminal. Do not upload or share your private key. This SSH-tunnel method does not require an inbound security-group rule for port 8081; restrict SSH port 22 to trusted source IPs.
 
-## 10. Jenkins CI pipeline
+## 10. Configure Jenkins CI
 
-The repository includes a `Jenkinsfile` with stages for:
-1. Checking out the repository.
-2. Running backend tests inside a Python container.
-3. Building the Docker Compose images.
+The current `Jenkinsfile` checks out the repository, runs backend tests in a Python container, and builds the Docker Compose images. It does not yet push images or deploy to Kubernetes.
 
-To set it up:
-1. Open the Jenkins dashboard.
-2. Select **New Item**, enter `CineMatch-CI`, and choose **Pipeline**.
-3. Under **Pipeline**, select **Pipeline script from SCM**.
-4. Select **Git**, enter `https://github.com/Elanchezhiya/Online-Movie-Recommendation.git`, set branch to `*/main`, and script path to `Jenkinsfile`.
-5. Save and select **Build Now**.
+1. Open Jenkins and select **New Item**.
+2. Enter a project name such as `CineMatch-CI` and choose **Pipeline**.
+3. Under Pipeline, choose **Pipeline script from SCM**.
+4. Select Git, enter your repository URL, choose branch `*/main`, and set script path to `Jenkinsfile`.
+5. Save and choose **Build Now**.
 6. Review **Console Output** if a stage fails.
 
-Jenkins must have the required Docker access and must be able to run Docker commands. This repository's current pipeline **does not push images or deploy to Kubernetes**; those steps must be added and configured with credentials and safe cluster access before calling it a full CI/CD deployment pipeline. Do not run Jenkins as root simply to bypass permissions. Use least-privilege credentials and protect the Jenkins UI.
+Ensure the Jenkins agent has the required Docker permissions and tools. Do not run Jenkins as root simply to bypass permissions. To add pushing or Kubernetes deployment stages, store credentials in Jenkins Credentials and configure cluster access separately; never hard-code tokens in pipeline code.
 
-## 11. Useful operations
+## 11. Useful commands
 
 ```bash
 # Kubernetes
@@ -319,31 +300,30 @@ docker compose down
 
 # Git
 git status
+git fetch origin
 git pull --rebase origin main
-git add README.md
-git commit -m "docs: add setup and deployment guide"
+git add README.md k8s/deployment.yaml
+git commit -m "chore: remove personal identifiers from project files"
 git push origin main
 ```
 
-## Troubleshooting quick reference
+## Troubleshooting
 
 | Symptom | First diagnostic |
 |---|---|
-| `DRV_AS_ROOT` | Run Minikube as `ubuntu`, not root |
-| Docker socket permission denied | Check `groups`, refresh login after adding `ubuntu` to `docker` |
-| Frontend `CrashLoopBackOff` | Run `kubectl logs <pod> --previous` and `kubectl describe pod <pod>` |
-| Frontend loads but API fails in Kubernetes | Verify Nginx proxy target resolves to `cinematch-backend:5000` |
-| Git push rejected as non-fast-forward | Run `git fetch origin`, then `git pull --rebase origin main`; resolve conflicts before pushing |
-| Windows SSH key rejected for permissions | Fix PEM ACLs in Windows PowerShell, then rerun SSH from Windows |
-| Local port 8081 inaccessible | Keep both port-forward and SSH tunnel terminals open |
+| Minikube error `DRV_AS_ROOT` | Run Minikube as `ubuntu`, not root |
+| Docker socket permission denied | Check `groups` and refresh the login after adding the user to `docker` |
+| Frontend `CrashLoopBackOff` | Run `kubectl logs <pod-name> --previous` and `kubectl describe pod <pod-name>` |
+| Frontend loads but API fails on Kubernetes | Check that Nginx proxies to `cinematch-backend:5000` |
+| Git push rejected as non-fast-forward | Fetch, rebase on `origin/main`, resolve conflicts, then push |
+| Port 8081 unavailable locally | Keep both the EC2 port-forward and Windows SSH-tunnel sessions open |
 
 ## Security notes
 
 - Never commit private keys, access tokens, passwords, or `.env` secrets.
-- Avoid exposing the Kubernetes API or Jenkins UI broadly to the internet.
-- For demos, prefer SSH tunnelling instead of opening extra application ports.
-- Keep Jenkins and OS packages updated.
-- Minikube is suitable for learning and demonstrations; use a managed Kubernetes service such as EKS for production requirements.
+- Avoid exposing Jenkins or the Kubernetes API broadly to the internet.
+- Prefer SSH tunnels for demonstrations instead of opening additional ports.
+- Minikube is suitable for learning and demos; production deployments may require a managed Kubernetes service.
 
 ## License
 
