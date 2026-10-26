@@ -1,4 +1,3 @@
-
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -15,7 +14,7 @@ spec:
     spec:
       containers:
         - name: backend
-          image: elandsmith1998/cinematch-backend:1.0
+          image: "${DOCKERHUB_USERNAME}/cinematch-backend:1.0"
           ports:
             - containerPort: 5000
           readinessProbe:
@@ -59,7 +58,7 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: elandsmith1998/cinematch-frontend:1.0
+          image: "${DOCKERHUB_USERNAME}/cinematch-frontend:1.0"
           ports:
             - containerPort: 80
 ---
